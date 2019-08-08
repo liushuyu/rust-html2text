@@ -1,0 +1,47 @@
+jobs:
+# adapted from https://github.com/alexcrichton/xz2-rs/blob/master/ci/azure-job-test-all.yml
+- job: Windows
+  pool:
+    vmImage: 'windows-2019'
+  strategy:
+    matrix:
+      # MSVC toolchains
+      stable-i686-msvc:
+        TOOLCHAIN: stable-i686-msvc
+      stable-x86_64-msvc:
+        TOOLCHAIN: stable-x86_64-msvc
+      beta-i686-msvc:
+        TOOLCHAIN: beta-i686-msvc
+      beta-x86_64-msvc:
+        TOOLCHAIN: beta-x86_64-msvc
+      nightly-i686-msvc:
+        TOOLCHAIN: nightly-i686-msvc
+      nightly-x86_64-msvc:
+        TOOLCHAIN: nightly-x86_64-msvc
+      # GNU toolchains
+      stable-i686-gnu:
+        TOOLCHAIN: stable-i686-gnu
+      stable-x86_64-gnu:
+        TOOLCHAIN: stable-x86_64-gnu
+      beta-i686-gnu:
+        TOOLCHAIN: beta-i686-gnu
+      beta-x86_64-gnu:
+        TOOLCHAIN: beta-x86_64-gnu
+      nightly-i686-gnu:
+        TOOLCHAIN: nightly-i686-gnu
+      nightly-x86_64-gnu:
+        TOOLCHAIN: nightly-x86_64-gnu
+  steps:
+    - script: |
+        curl -sSf -o rustup-init.exe https://win.rustup.rs
+        rustup-init.exe -y --default-toolchain %TOOLCHAIN%
+        echo ##vso[task.prependpath]%USERPROFILE%\.cargo\bin
+        rustup default %TOOLCHAIN%
+      displayName: Install rust (Windows)
+      condition: eq( variables['Agent.OS'], 'Windows_NT' )
+    - script: |
+        rustc -Vv
+        cargo -V
+      displayName: Query rust and cargo versions
+    - script: cargo test
+      displayName: "Run crate tests"
